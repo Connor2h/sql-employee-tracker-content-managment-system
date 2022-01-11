@@ -58,7 +58,12 @@ function viewAllDepartments (){
 }
 
 function viewAllRoles (){
-    const sql = `SELECT role.*, department.department_name 
+    // const sql = `SELECT role.*, department.department_name 
+    //             AS department
+    //             FROM role
+    //             LEFT JOIN department
+    //             ON role.department_id = department.id;`
+    const sql = `SELECT role.id, role.title, role.salary, department.department_name 
                 AS department
                 FROM role
                 LEFT JOIN department
