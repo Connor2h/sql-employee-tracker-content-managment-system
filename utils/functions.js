@@ -22,7 +22,7 @@ const promptUser = () => {
         }
 
         else if (options.choice === 'View all employees'){
-            console.log('View all employees is true');
+            viewAllEmployees();
         }
 
         else if (options.choice === 'Add a department'){
@@ -58,17 +58,33 @@ function viewAllDepartments (){
 }
 
 function viewAllRoles (){
-    // const sql = `SELECT role.*, department.department_name 
-    //             AS department
-    //             FROM role
-    //             LEFT JOIN department
-    //             ON role.department_id = department.id;`
     const sql = `SELECT role.id, role.title, role.salary, department.department_name 
                 AS department
                 FROM role
                 LEFT JOIN department
                 ON role.department_id = department.id;`
                 ;
+
+    db.query(sql, (err, rows) => {
+        if (err) throw err;
+        console.table('\n',rows, '\n');
+        promptUser();// recursion to prompt the main question again
+    });
+}
+
+function viewAllEmployees (){
+    const sql = `SELECT
+                employee.id,
+                employee.first_name, 
+                employee.last_name,
+                role.title,
+                department.department_name AS department,
+                role.salary,
+                CONCAT (manager.first_name, " ", manager.last_name) AS manager
+                FROM employee
+                LEFT JOIN role ON employee.role_id = role.id
+                LEFT JOIN department ON role.department_id = department.id
+                LEFT JOIN employee manager ON employee.manager_id = manager.id`;
 
     db.query(sql, (err, rows) => {
         if (err) throw err;

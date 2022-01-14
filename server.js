@@ -1,6 +1,6 @@
 const db = require('./db/connection');
 const inquirer = require("inquirer");
-const { promptUser, viewAllDepartments } = require('./utils/functions');
+const { promptUser } = require('./utils/functions');
 
 // Start server after DB connection
 db.connect(err => {
