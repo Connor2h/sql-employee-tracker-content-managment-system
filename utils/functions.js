@@ -124,8 +124,8 @@ function addDepartment (){
     })
 }
 
-// creates department and adds to database
-function addRole (tableData){
+//creates department and adds to database
+function addRole (){
 
     return inquirer.prompt([
         {
@@ -147,7 +147,7 @@ function addRole (tableData){
             message: 'What is the salary of the role? (Required)',
             validate: salary => {
                 if(isNaN(salary)){
-                    console.log('Please enter a salary number!');
+                    console.log('\tPlease enter a salary number!');
                     return false
                 }else{
                     console.log(`${salary} is a number`);
@@ -155,22 +155,27 @@ function addRole (tableData){
                 }
             }
         },
-    ]).then(({ name, salary }) =>{
+    ]).then((answers) =>{
+        //
+        // console.log(name);
+        // console.log(salary);
 
-        console.log(name);
-        console.log(salary);
+        this.answers = [answers.name, answers.salary];
+        const params = [answers.name, answers.salary];
+        
+        //console.log(params);
 
-        const params = [name, salary];
-        console.log(params);
-
-        const roleSQL = `SELECT department_name, id FROM department`;
+        const roleSQL = `SELECT department_name, id FROM department`;//select department_name and id FROM THE department table
 
         db.query(roleSQL, (err, data) => {
+            //console.log("I am consoling", this.answers);
             if (err) throw err;
+            //console.log("this is the data", data);
 
-            const department = data.map(({ name, id }) => ({ name: name, value: id }));
+            const department = data.map(({ department_name, id }) => ({ name: department_name, value: id }));
+                                       //[{conner, 1}] => [{name: conner, value:1}]
 
-            console.log(department);
+            //console.log(department);
 
             inquirer.prompt([
                 {
@@ -180,11 +185,11 @@ function addRole (tableData){
                     choices: department
                 }
             ]).then((departmentChoice) =>{
-                console.log(departmentChoice.department);
+                // console.log(departmentChoice.department);
                 const dept = departmentChoice.department;
                 params.push(dept);
 
-                console.log(params);
+                // console.log(params);
 
                 const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
 
@@ -197,6 +202,57 @@ function addRole (tableData){
             })
         });
 
+    })
+}
+
+
+// function addRole (){
+//     //query db for all existing departments
+//     //viewAllDepartment()
+//     //.then()
+//     //once your query has fired, make result into an arrray for department choices
+//     //use a .map for ^
+
+//     //once you have your department choice array
+//     //prompt user for questions
+//     // name of role
+//     // salary price
+//     // which department (using your newly made department array)
+//     //.then use the "answer" to createRole()
+
+//     // getDepartments();
+//     // .then()
+
+
+
+// }
+
+function addEmployee (){
+
+    return inquirer.prompt([
+        {
+            type: 'input',
+            name: 'name',
+            message: 'What is the name of the department you would like to add? (Required)',
+            validate: name => {
+                if(name){
+                    return true
+                }else{
+                    console.log('Please enter a department!');
+                    return false;
+                }
+            }
+        }
+    ]).then((choice) =>{
+        
+        const sql = `INSERT INTO department (department_name) VALUES (?)`;
+        const params = [ choice.name ];
+    
+        db.query(sql, params, (err, result) => {
+            if (err) throw err;
+            console.log('\n\n');// added new lines to space better
+            promptUser();// recursion to prompt the main question again
+        });
     })
 }
 
