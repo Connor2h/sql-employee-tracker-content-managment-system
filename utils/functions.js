@@ -30,7 +30,8 @@ const promptUser = () => {
         }
 
         else if (options.choice === 'Add a role'){
-            console.log('Add a role is true');
+            console.log("added a role");
+            addRole();
         }
 
         else if (options.choice === 'Add an employee'){
@@ -116,13 +117,86 @@ function addDepartment (){
         const params = [ choice.name ];
     
         db.query(sql, params, (err, result) => {
-            if (err) {
-                res.status(400).json({ error: err.message });
-                return;
-            }
+            if (err) throw err;
             console.log('\n\n');// added new lines to space better
             promptUser();// recursion to prompt the main question again
         });
+    })
+}
+
+// creates department and adds to database
+function addRole (tableData){
+
+    return inquirer.prompt([
+        {
+            type: 'input',
+            name: 'name',
+            message: 'What is the name of the role you would like to add? (Required)',
+            validate: name => {
+                if(name){
+                    return true
+                }else{
+                    console.log('Please enter a role!');
+                    return false;
+                }
+            }
+        },
+        {
+            type: 'input',
+            name: 'salary',
+            message: 'What is the salary of the role? (Required)',
+            validate: salary => {
+                if(isNaN(salary)){
+                    console.log('Please enter a salary number!');
+                    return false
+                }else{
+                    console.log(`${salary} is a number`);
+                    return true;
+                }
+            }
+        },
+    ]).then(({ name, salary }) =>{
+
+        console.log(name);
+        console.log(salary);
+
+        const params = [name, salary];
+        console.log(params);
+
+        const roleSQL = `SELECT department_name, id FROM department`;
+
+        db.query(roleSQL, (err, data) => {
+            if (err) throw err;
+
+            const department = data.map(({ name, id }) => ({ name: name, value: id }));
+
+            console.log(department);
+
+            inquirer.prompt([
+                {
+                    type: 'list', 
+                    name: 'department',
+                    message: "What department is this role in?",
+                    choices: department
+                }
+            ]).then((departmentChoice) =>{
+                console.log(departmentChoice.department);
+                const dept = departmentChoice.department;
+                params.push(dept);
+
+                console.log(params);
+
+                const sql = `INSERT INTO role (title, salary, department_id) VALUES (?, ?, ?)`;
+
+                db.query(sql, params, (err, result) => {
+                    if (err) throw err;
+                    console.log('\n\n');// added new lines to space better
+                    promptUser();// recursion to prompt the main question again
+                });
+
+            })
+        });
+
     })
 }
 
@@ -130,7 +204,7 @@ function addDepartment (){
 
 function leaveDatabase(){
     console.log("Goodbye");
-    db.end;
+    db.end();
 }
 
 module.exports = {promptUser, viewAllDepartments};
