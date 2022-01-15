@@ -26,7 +26,7 @@ const promptUser = () => {
         }
 
         else if (options.choice === 'Add a department'){
-            console.log('Add a department is true');
+            addDepartment();
         }
 
         else if (options.choice === 'Add a role'){
@@ -42,7 +42,7 @@ const promptUser = () => {
         }
         
         else {
-            console.log('Leave the Database is true');
+            leaveDatabase();
         }
     })
 }
@@ -91,6 +91,46 @@ function viewAllEmployees (){
         console.table('\n',rows, '\n');
         promptUser();// recursion to prompt the main question again
     });
+}
+
+// creates department and adds to database
+function addDepartment (){
+
+    return inquirer.prompt([
+        {
+            type: 'input',
+            name: 'name',
+            message: 'What is the name of the department you would like to add? (Required)',
+            validate: name => {
+                if(name){
+                    return true
+                }else{
+                    console.log('Please enter a department!');
+                    return false;
+                }
+            }
+        }
+    ]).then((choice) =>{
+        
+        const sql = `INSERT INTO department (department_name) VALUES (?)`;
+        const params = [ choice.name ];
+    
+        db.query(sql, params, (err, result) => {
+            if (err) {
+                res.status(400).json({ error: err.message });
+                return;
+            }
+            console.log('\n\n');// added new lines to space better
+            promptUser();// recursion to prompt the main question again
+        });
+    })
+}
+
+
+
+function leaveDatabase(){
+    console.log("Goodbye");
+    db.end;
 }
 
 module.exports = {promptUser, viewAllDepartments};
