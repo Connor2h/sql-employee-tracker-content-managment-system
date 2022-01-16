@@ -38,7 +38,7 @@ const promptUser = () => {
         }
 
         else if (options.choice === 'Update an employee role'){
-            console.log('Update an employee role is true');
+            updateEmployee();
         }
         
         else {
@@ -287,11 +287,63 @@ function addEmployee (){
     })
 }
 
+//update employee
+function updateEmployee(){
 
+    const employeeSql = `SELECT * FROM employee`;
 
+    db.query(employeeSql, (err, data) => {
+        if (err) throw err;
+        
+        const employees = data.map(({ first_name, last_name, id }) => ({ name: first_name + " "+ last_name, value: id }));
+
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employeeName',
+                message: "Which employee would you like to update?",
+                choices: employees
+            }
+        ]).then(({ employeeName }) => {
+            console.log(employeeName);
+            const params = [];
+            params.push(employeeName);
+
+            const roleSql = `SELECT * FROM role`;
+
+            db.query(roleSql, (err, data) => {
+                if (err) throw err;
+
+                const roles = data.map(({ title, id }) => ({ name: title, value: id }));
+                console.log(roles);
+
+                inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'employeeRole',
+                        message: "What is the employee's new role?",
+                        choices: roles
+                    }
+                ]).then(({ employeeRole }) => {
+                    params.unshift(employeeRole);// added employeeRole to params array at first index with unshift method
+
+                    const sql = `UPDATE employee SET role_id = ? WHERE id = ?`;
+
+                    db.query(sql, params, (err, result) => {
+                        if (err) throw err;
+                        console.log('Employee has been updated\n\n');// added new lines to space better
+                        promptUser();// recursion to prompt the main question again
+                    })
+                })
+            })
+        })
+    });
+}
+
+//leave application
 function leaveDatabase(){
     console.log("Goodbye");
     db.end();
 }
 
-module.exports = {promptUser, viewAllDepartments};
+module.exports = {promptUser};
