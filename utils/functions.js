@@ -9,7 +9,7 @@ const promptUser = () => {
             type: 'list',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'Delete departments', 'Delete roles', 'Delete employees', 'View total budget', 'Leave the Database']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'View Employees by Department', 'Delete departments', 'Delete roles', 'Delete employees', 'View total budget', 'Leave the Database']
         }
     ]).then(({choice}) =>{
 
@@ -43,6 +43,10 @@ const promptUser = () => {
 
         else if (choice === 'Update employee managers'){
             updateManager();
+        }
+
+        else if (choice === 'View Employees by Department'){
+            viewEmployeeDepartment();
         }
 
         else if (choice === 'Delete departments'){
@@ -325,7 +329,7 @@ function updateEmployee(){
                 choices: employees
             }
         ]).then(({ employeeName }) => {
-            console.log(employeeName);
+            //console.log(employeeName);
             const params = [];
             params.push(employeeName);
 
@@ -335,7 +339,7 @@ function updateEmployee(){
                 if (err) throw err;
 
                 const roles = data.map(({ title, id }) => ({ name: title, value: id }));
-                console.log(roles);
+                //console.log(roles);
 
                 inquirer.prompt([
                     {
@@ -407,6 +411,22 @@ function updateManager(){
                 })
             })
         })
+    })
+}
+
+//View employees by department
+function viewEmployeeDepartment() {
+    const sql = `SELECT employee.first_name, 
+                employee.last_name, 
+                department.department_name AS department
+                FROM employee 
+                LEFT JOIN role ON employee.role_id = role.id 
+                LEFT JOIN department ON role.department_id = department.id`;
+
+    db.query(sql, (err, rows) => {
+        if (err) throw err;
+        console.table('\n',rows, '\n');
+        promptUser();// recursion to prompt the main question again
     })
 }
 
