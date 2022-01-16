@@ -9,7 +9,7 @@ const promptUser = () => {
             type: 'list',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'Delete departments', 'View total budget', 'Leave the Database']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'Delete departments', 'Delete roles', 'View total budget', 'Leave the Database']
         }
     ]).then((options) =>{
 
@@ -47,6 +47,10 @@ const promptUser = () => {
 
         else if (options.choice === 'Delete departments'){
             deleteDepartment();
+        }
+
+        else if (options.choice === 'Delete roles'){
+            deleteRole();
         }
 
         else if (options.choice === 'View total budget'){
@@ -423,6 +427,33 @@ function deleteDepartment() {
             db.query(sql, department, (err, result) =>{
                 if (err) throw err;
                 console.log('The Department you selected is deleted\n\n');// added new lines to space better
+                promptUser();// recursion to prompt the main question again
+            })
+        })
+    })
+}
+
+//delete roles
+function deleteRole() {
+    const roleSql = "SELECT * FROM role";
+
+    db.query(roleSql, (err, data) => {
+
+        const role = data.map(({ title, id }) => ({ name: title, value: id }));
+
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'role',
+                message: 'What role would you like to delete?',
+                choices: role
+            }
+        ]).then(({ role }) => {
+            const sql = `DELETE FROM role WHERE id = ?`;
+
+            db.query(sql, role, (err, result) =>{
+                if (err) throw err;
+                console.log('The role you selected is deleted\n\n');// added new lines to space better
                 promptUser();// recursion to prompt the main question again
             })
         })
