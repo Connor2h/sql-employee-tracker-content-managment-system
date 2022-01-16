@@ -9,51 +9,55 @@ const promptUser = () => {
             type: 'list',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'Delete departments', 'Delete roles', 'View total budget', 'Leave the Database']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'Delete departments', 'Delete roles', 'Delete employees', 'View total budget', 'Leave the Database']
         }
-    ]).then((options) =>{
+    ]).then(({choice}) =>{
 
-        if (options.choice === 'View all departments'){
+        if (choice === 'View all departments'){
             viewAllDepartments();
         }
 
-        else if (options.choice === 'View all roles'){
+        else if (choice === 'View all roles'){
             viewAllRoles();
         }
 
-        else if (options.choice === 'View all employees'){
+        else if (choice === 'View all employees'){
             viewAllEmployees();
         }
 
-        else if (options.choice === 'Add a department'){
+        else if (choice === 'Add a department'){
             addDepartment();
         }
 
-        else if (options.choice === 'Add a role'){
+        else if (choice === 'Add a role'){
             addRole();
         }
 
-        else if (options.choice === 'Add an employee'){
+        else if (choice === 'Add an employee'){
             addEmployee();
         }
 
-        else if (options.choice === 'Update an employee role'){
+        else if (choice === 'Update an employee role'){
             updateEmployee();
         }
 
-        else if (options.choice === 'Update employee managers'){
+        else if (choice === 'Update employee managers'){
             updateManager();
         }
 
-        else if (options.choice === 'Delete departments'){
+        else if (choice === 'Delete departments'){
             deleteDepartment();
         }
 
-        else if (options.choice === 'Delete roles'){
+        else if (choice === 'Delete roles'){
             deleteRole();
         }
 
-        else if (options.choice === 'View total budget'){
+        else if (choice === 'Delete employees'){
+            deleteEmployee();
+        }
+
+        else if (choice === 'View total budget'){
             totalBudget();
         }
         
@@ -454,6 +458,33 @@ function deleteRole() {
             db.query(sql, role, (err, result) =>{
                 if (err) throw err;
                 console.log('The role you selected is deleted\n\n');// added new lines to space better
+                promptUser();// recursion to prompt the main question again
+            })
+        })
+    })
+}
+
+//delete employee
+function deleteEmployee() {
+    const employeeSql = "SELECT * FROM employee";
+
+    db.query(employeeSql, (err, data) => {
+
+        const employees = data.map(({ first_name, last_name, id }) => ({ name: first_name + " " + last_name, value: id }));
+
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employeeName',
+                message: 'What employee would you like to delete?',
+                choices: employees
+            }
+        ]).then(({ employeeName }) => {
+            const sql = `DELETE FROM employee WHERE id = ?`;
+
+            db.query(sql, employeeName, (err, result) =>{
+                if (err) throw err;
+                console.log('The employee you selected is deleted\n\n');// added new lines to space better
                 promptUser();// recursion to prompt the main question again
             })
         })
