@@ -9,7 +9,7 @@ const promptUser = () => {
             type: 'list',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'View total budget', 'Leave the Database']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'View total budget', 'Leave the Database']
         }
     ]).then((options) =>{
 
@@ -39,6 +39,10 @@ const promptUser = () => {
 
         else if (options.choice === 'Update an employee role'){
             updateEmployee();
+        }
+
+        else if (options.choice === 'Update employee managers'){
+            updateManager();
         }
 
         else if (options.choice === 'View total budget'){
@@ -342,6 +346,57 @@ function updateEmployee(){
             })
         })
     });
+}
+
+//update employee managers
+function updateManager(){
+    const employeeSql = `SELECT * FROM employee`;
+
+    db.query(employeeSql, (err, data) => {
+        if (err) throw err;
+        
+        const employees = data.map(({  first_name, last_name, id }) => ({ name: first_name + " "+ last_name, value: id }));
+
+        console.log(employees);
+
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'employeeName',
+                message: "Which employee would you like to update?",
+                choices: employees
+            }
+        ]).then(({ employeeName }) => {
+            const params = [];
+            params.push(employeeName);
+
+            const managerSql = `SELECT * FROM employee`;
+
+            db.query(managerSql, (err, data) =>{
+                if (err) throw err;
+
+                const managers = data.map(({  first_name, last_name, id }) => ({ name: first_name + " "+ last_name, value: id }));
+
+                inquirer.prompt([
+                    {
+                        type: 'list',
+                        name: 'managerName',
+                        message: "Who is the employee's manager?",
+                        choices: managers
+                    }
+                ]).then(({ managerName }) => {
+                    params.unshift(managerName);// added managerName to params array at first index with unshift method
+
+                    const sql = `UPDATE employee SET manager_id = ? WHERE id = ?`;
+
+                    db.query(sql, params, (err, result) =>{
+                        console.log('Employee manager has been updated\n\n');// added new lines to space better
+                        promptUser();// recursion to prompt the main question again
+                    })
+                })
+            })
+        })
+    })
 }
 
 //show total budget
