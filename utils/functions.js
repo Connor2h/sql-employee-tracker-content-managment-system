@@ -173,7 +173,7 @@ function addRole (){
                     console.log('\tPlease enter a salary number!');
                     return false
                 }else{
-                    console.log(`${salary} is a number`);
+                    console.log(` is a number`);
                     return true;
                 }
             }
