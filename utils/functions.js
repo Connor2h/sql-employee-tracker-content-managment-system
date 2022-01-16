@@ -3,13 +3,13 @@ const inquirer = require('inquirer');
 const cTable = require('console.table');
 
 const promptUser = () => {
-    console.log('Database connected.');
+    
     return inquirer.prompt([
         {
             type: 'list',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Leave the Database']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'View total budget', 'Leave the Database']
         }
     ]).then((options) =>{
 
@@ -39,6 +39,10 @@ const promptUser = () => {
 
         else if (options.choice === 'Update an employee role'){
             updateEmployee();
+        }
+
+        else if (options.choice === 'View total budget'){
+            totalBudget();
         }
         
         else {
@@ -338,6 +342,22 @@ function updateEmployee(){
             })
         })
     });
+}
+
+//show total budget
+function totalBudget () {
+    const sql = `SELECT department_id AS id, 
+                department.department_name AS department,
+                SUM(salary) AS budget
+                FROM  role  
+                JOIN department ON role.department_id = department.id GROUP BY department_id`;
+
+    db.query(sql, (err, rows) => {
+        if (err) throw err;
+        console.table('\n',rows, '\n');
+        promptUser();// recursion to prompt the main question again
+    });
+
 }
 
 //leave application
