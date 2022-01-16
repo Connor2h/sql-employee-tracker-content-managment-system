@@ -9,7 +9,7 @@ const promptUser = () => {
             type: 'list',
             name: 'choice',
             message: 'What would you like to do?',
-            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'View total budget', 'Leave the Database']
+            choices: ['View all departments', 'View all roles', 'View all employees', 'Add a department', 'Add a role', 'Add an employee', 'Update an employee role', 'Update employee managers', 'Delete departments', 'View total budget', 'Leave the Database']
         }
     ]).then((options) =>{
 
@@ -43,6 +43,10 @@ const promptUser = () => {
 
         else if (options.choice === 'Update employee managers'){
             updateManager();
+        }
+
+        else if (options.choice === 'Delete departments'){
+            deleteDepartment();
         }
 
         else if (options.choice === 'View total budget'){
@@ -348,17 +352,16 @@ function updateEmployee(){
     });
 }
 
+
 //update employee managers
 function updateManager(){
     const employeeSql = `SELECT * FROM employee`;
-
+    
     db.query(employeeSql, (err, data) => {
         if (err) throw err;
         
         const employees = data.map(({  first_name, last_name, id }) => ({ name: first_name + " "+ last_name, value: id }));
-
-        console.log(employees);
-
+        
         inquirer.prompt([
             {
                 type: 'list',
@@ -369,14 +372,14 @@ function updateManager(){
         ]).then(({ employeeName }) => {
             const params = [];
             params.push(employeeName);
-
+            
             const managerSql = `SELECT * FROM employee`;
-
+            
             db.query(managerSql, (err, data) =>{
                 if (err) throw err;
-
+                
                 const managers = data.map(({  first_name, last_name, id }) => ({ name: first_name + " "+ last_name, value: id }));
-
+                
                 inquirer.prompt([
                     {
                         type: 'list',
@@ -386,14 +389,41 @@ function updateManager(){
                     }
                 ]).then(({ managerName }) => {
                     params.unshift(managerName);// added managerName to params array at first index with unshift method
-
+                    
                     const sql = `UPDATE employee SET manager_id = ? WHERE id = ?`;
-
+                    
                     db.query(sql, params, (err, result) =>{
                         console.log('Employee manager has been updated\n\n');// added new lines to space better
                         promptUser();// recursion to prompt the main question again
                     })
                 })
+            })
+        })
+    })
+}
+
+//delete department
+function deleteDepartment() {
+    const departmentSql = "SELECT * FROM department";
+
+    db.query(departmentSql, (err, data) => {
+
+        const department = data.map(({ department_name, id }) => ({ name: department_name, value: id }));
+
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'department',
+                message: 'What department would you like to delete?',
+                choices: department
+            }
+        ]).then(({ department }) => {
+            const sql = `DELETE FROM department WHERE id = ?`;
+
+            db.query(sql, department, (err, result) =>{
+                if (err) throw err;
+                console.log('The Department you selected is deleted\n\n');// added new lines to space better
+                promptUser();// recursion to prompt the main question again
             })
         })
     })
