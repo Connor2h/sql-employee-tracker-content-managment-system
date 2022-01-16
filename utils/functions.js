@@ -30,12 +30,11 @@ const promptUser = () => {
         }
 
         else if (options.choice === 'Add a role'){
-            console.log("added a role");
             addRole();
         }
 
         else if (options.choice === 'Add an employee'){
-            console.log('Add an employee is true');
+            addEmployee();
         }
 
         else if (options.choice === 'Update an employee role'){
@@ -118,7 +117,7 @@ function addDepartment (){
     
         db.query(sql, params, (err, result) => {
             if (err) throw err;
-            console.log('\n\n');// added new lines to space better
+            console.log('Department is added to the database\n\n');// added new lines to space better
             promptUser();// recursion to prompt the main question again
         });
     })
@@ -195,7 +194,7 @@ function addRole (){
 
                 db.query(sql, params, (err, result) => {
                     if (err) throw err;
-                    console.log('\n\n');// added new lines to space better
+                    console.log('Role is added to the database\n\n');// added new lines to space better
                     promptUser();// recursion to prompt the main question again
                 });
 
@@ -205,54 +204,86 @@ function addRole (){
     })
 }
 
-
-// function addRole (){
-//     //query db for all existing departments
-//     //viewAllDepartment()
-//     //.then()
-//     //once your query has fired, make result into an arrray for department choices
-//     //use a .map for ^
-
-//     //once you have your department choice array
-//     //prompt user for questions
-//     // name of role
-//     // salary price
-//     // which department (using your newly made department array)
-//     //.then use the "answer" to createRole()
-
-//     // getDepartments();
-//     // .then()
-
-
-
-// }
-
+//add employee
 function addEmployee (){
 
     return inquirer.prompt([
         {
             type: 'input',
-            name: 'name',
-            message: 'What is the name of the department you would like to add? (Required)',
-            validate: name => {
-                if(name){
+            name: 'firstName',
+            message: 'What is the employees first name? (Required)',
+            validate: firstName => {
+                if(firstName){
                     return true
                 }else{
                     console.log('Please enter a department!');
                     return false;
                 }
             }
-        }
-    ]).then((choice) =>{
-        
-        const sql = `INSERT INTO department (department_name) VALUES (?)`;
-        const params = [ choice.name ];
-    
-        db.query(sql, params, (err, result) => {
+        },
+        {
+            type: 'input',
+            name: 'lastName',
+            message: 'What is the employees last name? (Required)',
+            validate: lastName => {
+                if(lastName){
+                    return true
+                }else{
+                    console.log('Please enter a department!');
+                    return false;
+                }
+            }
+        },
+    ]).then(( {firstName, lastName} ) =>{
+
+        const params = [firstName, lastName];
+
+        const roleSql = `SELECT role.id, role.title FROM role`;
+
+        db.query(roleSql, (err, data) => {
             if (err) throw err;
-            console.log('\n\n');// added new lines to space better
-            promptUser();// recursion to prompt the main question again
-        });
+
+            const roles = data.map(({ id, title }) => ({ name: title, value: id }));
+
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'role',
+                    message: "What is the employee's role?",
+                    choices: roles
+                }
+            ]).then(({ role }) => {
+                params.push(role);//added role to array/ params now looks like this = [firstName, lastName, role]
+
+                const managerSql = `SELECT * FROM employee`;
+
+                db.query(managerSql, (err, data) => {
+                    if (err) throw err;
+
+                    const managers = data.map(({ first_name, last_name, id }) => ({ name: first_name + " "+ last_name, value: id }));
+
+                    inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'manager',
+                            message: "Who is the employee's manager?",
+                            choices: managers
+                        }
+                    ]).then(({ manager }) => {
+                        params.push(manager);
+
+                        const sql = `INSERT INTO employee (first_name, last_name, role_id, manager_id)
+                                    VALUES (?, ?, ?, ?)`;
+
+                        db.query(sql, params, (err, result) => {
+                            if (err) throw err;
+                            console.log('Employee is added to the database\n\n');// added new lines to space better
+                            promptUser();// recursion to prompt the main question again
+                        });
+                    })
+                });
+            })           
+        });        
     })
 }
 
